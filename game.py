@@ -96,7 +96,7 @@ def main():
         return
 
     while True:
-        clock.tick(1)
+        clock.tick(20)
         # Event processing
         done = False
         for event in pygame.event.get():
@@ -116,6 +116,7 @@ def main():
                 elif event.key == pygame.K_LEFT:
                     if direction != DIRECTIONS.Right:
                          direction = DIRECTIONS.Left
+                break
 
         if done:
             break
