@@ -10,12 +10,6 @@ OFFSET = 16
 class Directions:
     Up, Down, Left, Right = range(4)
 
-def prettyprint(x):
-    for row in x:
-        for col in row:
-            print(col, end='')
-        print(end='\n')
-
 def findFood(spots):
     while True:
         food = random.randrange(BOARD_LENGTH), random.randrange(BOARD_LENGTH)
@@ -84,13 +78,17 @@ def main():
                 done = True
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    direction = Directions.Up
+                    if direction != Directions.Down:
+                         direction = Directions.Up
                 elif event.key == pygame.K_DOWN:
-                    direction = Directions.Down
+                    if direction != Directions.Up:
+                         direction = Directions.Down
                 elif event.key == pygame.K_RIGHT:
-                    direction = Directions.Right
+                    if direction != Directions.Left:
+                         direction = Directions.Right
                 elif event.key == pygame.K_LEFT:
-                    direction = Directions.Left
+                    if direction != Directions.Right:
+                         direction = Directions.Left
 
 
         if done:
