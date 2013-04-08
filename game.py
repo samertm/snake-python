@@ -2,8 +2,10 @@ import sys
 import collections
 import time
 import random
+import pygame
 
 BOARD_LENGTH = 32
+OFFSET = 16
 
 class Directions:
     Up, Down, Left, Right = range(4)
@@ -28,17 +30,37 @@ def endCondition(board, coord):
         return True
     return False
 
-def updateBoard(snake, food):
+def updateBoard(screen, snake, food):
+    white = (255, 255, 255)
+    black = (0, 0, 0)
+
+    rect = pygame.Rect(0,0,OFFSET,OFFSET)
+    
     spots = [[] for i in range(BOARD_LENGTH)]
+    num1 = 0
+    num2 = 0
     for row in spots:
         for i in range(BOARD_LENGTH):
             row.append(0)
+            temprect = rect.move(num1*OFFSET,num2*OFFSET) 
+            pygame.draw.rect(screen, white, temprect)
+            num2 += 1
+        num1 += 1
     spots[food[0]][food[1]] = 2
+    temprect = rect.move(food[1]*OFFSET, food[0]*OFFSET)
+    pygame.draw.rect(screen, black, temprect)
     for coord in snake:
         spots[coord[0]][coord[1]] = 1
+        temprect = rect.move(coord[1]*OFFSET, coord[0]*OFFSET)
+        pygame.draw.rect(screen, black, temprect)
     return spots
 
 def main():
+    pygame.init()
+    screen = pygame.display.set_mode([BOARD_LENGTH*OFFSET, BOARD_LENGTH*OFFSET])
+    pygame.display.set_caption("Snaake")
+    clock = pygame.time.Clock()
+
     spots = [[] for i in range(BOARD_LENGTH)]
     for row in spots:
         for i in range(BOARD_LENGTH):
@@ -50,14 +72,31 @@ def main():
     snake = collections.deque()
     snake.append((0,0))
     spots[0][0] = 1
-#    food = findFood(spots)
-#   for debugging
-    food = 0,6
+    food = findFood(spots)
     spots[food[0]][food[1]] = 2
-    prettyprint(spots)
 
     while True:
-        currtime = time.time()
+        # Event processing 
+        done = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print("Quit given")
+                done = True
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    direction = Directions.Up
+                elif event.key == pygame.K_DOWN:
+                    direction = Directions.Down
+                elif event.key == pygame.K_RIGHT:
+                    direction = Directions.Right
+                elif event.key == pygame.K_LEFT:
+                    direction = Directions.Left
+
+
+        if done:
+            break
+
+        # Game logic
         head = snake.pop()
         if (direction == Directions.Up):
             nextHead = (head[0] - 1, head[1])
@@ -68,6 +107,8 @@ def main():
         elif (direction == Directions.Right):
             nextHead = (head[0], head[1] + 1)
         if (endCondition(spots, nextHead)):
+            print(nextHead)
+            print("end condition reached")
             break
 
         if spots[nextHead[0]][nextHead[1]] == 2:
@@ -79,12 +120,20 @@ def main():
         
         if len(snake) > tailmax:
             tail = snake.popleft()
-        
-        spots = updateBoard(snake, food)
-        prettyprint(spots)
 
-        while (time.time() - currtime < .5):
-            time.sleep(.1)
+        # Draw code
+        black = (0,0,0)
+        white = (255, 255, 255)
+        screen.fill(white) # makes screen white
+        
+        spots = updateBoard(screen, snake, food)
+
+
+#        pygame.draw.line(screen, white, (60, 60), (120, 60), 4)
+        pygame.display.update()
+
+        clock.tick(20)
+    pygame.quit()
 
 if __name__ == "__main__":
     main()
