@@ -4,9 +4,9 @@ import pygame
 
 BOARD_LENGTH = 32
 OFFSET = 16
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
-class Directions:
-    Up, Down, Left, Right = range(4)
 
 DIRECTIONS = namedtuple('DIRECTIONS',
                         ['Up', 'Down', 'Left', 'Right'])(0, 1, 2, 3)
@@ -31,9 +31,6 @@ def end_condition(board, coord):
 
 
 def update_board(screen, snake, food):
-    white = (255, 255, 255)
-    black = (0, 0, 0)
-
     rect = pygame.Rect(0, 0, OFFSET, OFFSET)
 
     spots = [[] for i in range(BOARD_LENGTH)]
@@ -43,16 +40,16 @@ def update_board(screen, snake, food):
         for i in range(BOARD_LENGTH):
             row.append(0)
             temprect = rect.move(num1 * OFFSET, num2 * OFFSET)
-            pygame.draw.rect(screen, white, temprect)
+            pygame.draw.rect(screen, WHITE, temprect)
             num2 += 1
         num1 += 1
     spots[food[0]][food[1]] = 2
     temprect = rect.move(food[1] * OFFSET, food[0] * OFFSET)
-    pygame.draw.rect(screen, black, temprect)
+    pygame.draw.rect(screen, BLACK, temprect)
     for coord in snake:
         spots[coord[0]][coord[1]] = 1
         temprect = rect.move(coord[1] * OFFSET, coord[0] * OFFSET)
-        pygame.draw.rect(screen, black, temprect)
+        pygame.draw.rect(screen, BLACK, temprect)
     return spots
 
 
@@ -77,7 +74,29 @@ def main():
     food = find_food(spots)
     spots[food[0]][food[1]] = 2
 
+    # Menu screen
+    menu_message = pygame.font.Font(None, 30).render("Press enter to start", True, BLACK)
+    screen.fill(WHITE)
+    screen.blit(menu_message, (32, 32)) 
+    pygame.display.update()
+    entered = False
+    while not entered:
+        done = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print("Quit given")
+                done = True
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    entered = True
+        if done:
+            break
+    if done:
+        pygame.quit()
+        return
+
     while True:
+        clock.tick(1)
         # Event processing
         done = False
         for event in pygame.event.get():
@@ -97,7 +116,6 @@ def main():
                 elif event.key == pygame.K_LEFT:
                     if direction != DIRECTIONS.Right:
                          direction = DIRECTIONS.Left
-
 
         if done:
             break
@@ -128,16 +146,13 @@ def main():
             tail = snake.popleft()
 
         # Draw code
-        black = (0, 0, 0)
-        white = (255, 255, 255)
-        screen.fill(white)  # makes screen white
+        screen.fill(WHITE)  # makes screen white
 
         spots = update_board(screen, snake, food)
 
-#        pygame.draw.line(screen, white, (60, 60), (120, 60), 4)
         pygame.display.update()
 
-        clock.tick(15)
+
     pygame.quit()
 
 if __name__ == "__main__":
