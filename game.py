@@ -130,7 +130,7 @@ def main():
 #        pygame.draw.line(screen, white, (60, 60), (120, 60), 4)
         pygame.display.update()
 
-        clock.tick(20)
+        clock.tick(15)
     pygame.quit()
 
 if __name__ == "__main__":
