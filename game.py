@@ -49,8 +49,11 @@ def update_board(screen, snake, food):
     for coord in snake:
         spots[coord[0]][coord[1]] = 1
         temprect = rect.move(coord[1] * OFFSET, coord[0] * OFFSET)
-        pygame.draw.rect(screen, BLACK, temprect)
+        pygame.draw.rect(screen, coord[2], temprect)
     return spots
+
+def rand_color():
+    return (random.randrange(254), random.randrange(254), random.randrange(254))
 
 
 def main():
@@ -69,7 +72,7 @@ def main():
     tailmax = 4
     direction = DIRECTIONS.Right
     snake = deque()
-    snake.append((0, 0))
+    snake.append((0, 0, rand_color()))
     spots[0][0] = 1
     food = find_food(spots)
     spots[food[0]][food[1]] = 2
@@ -96,7 +99,7 @@ def main():
         return
 
     while True:
-        clock.tick(20)
+        clock.tick(15)
         # Event processing
         done = False
         for event in pygame.event.get():
@@ -124,13 +127,13 @@ def main():
         # Game logic
         head = snake.pop()
         if (direction == DIRECTIONS.Up):
-            next_head = (head[0] - 1, head[1])
+            next_head = (head[0] - 1, head[1], rand_color())
         elif (direction == DIRECTIONS.Down):
-            next_head = (head[0] + 1, head[1])
+            next_head = (head[0] + 1, head[1], rand_color())
         elif (direction == DIRECTIONS.Left):
-            next_head = (head[0], head[1] - 1)
+            next_head = (head[0], head[1] - 1, rand_color())
         elif (direction == DIRECTIONS.Right):
-            next_head = (head[0], head[1] + 1)
+            next_head = (head[0], head[1] + 1, rand_color())
         if (end_condition(spots, next_head)):
             print(next_head)
             print("end condition reached")
@@ -153,6 +156,7 @@ def main():
 
         pygame.display.update()
 
+    print("foods eaten %d" % (tailmax / 4 - 1))
 
     pygame.quit()
 
