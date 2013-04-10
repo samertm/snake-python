@@ -40,12 +40,12 @@ def update_board(screen, snake, food):
         for i in range(BOARD_LENGTH):
             row.append(0)
             temprect = rect.move(num1 * OFFSET, num2 * OFFSET)
-            pygame.draw.rect(screen, WHITE, temprect)
+            pygame.draw.rect(screen, BLACK, temprect)
             num2 += 1
         num1 += 1
     spots[food[0]][food[1]] = 2
     temprect = rect.move(food[1] * OFFSET, food[0] * OFFSET)
-    pygame.draw.rect(screen, BLACK, temprect)
+    pygame.draw.rect(screen, WHITE, temprect)
     for coord in snake:
         spots[coord[0]][coord[1]] = 1
         temprect = rect.move(coord[1] * OFFSET, coord[0] * OFFSET)
@@ -57,8 +57,8 @@ def rand_color():
 
 # Return 0 to exit the program, 1 for a one-player game
 def menu(screen):
-    menu_message = pygame.font.Font(None, 30).render("Press enter to start", True, BLACK)
-    screen.fill(WHITE)
+    menu_message = pygame.font.Font(None, 30).render("Press enter to start", True, WHITE)
+    screen.fill(BLACK)
     screen.blit(menu_message, (32, 32)) 
     pygame.display.update()
     while True: 
@@ -150,7 +150,7 @@ def oneplayer(screen):
             tail = snake.popleft()
 
         # Draw code
-        screen.fill(WHITE)  # makes screen white
+        screen.fill(BLACK)  # makes screen white
 
         spots = update_board(screen, snake, food)
 
@@ -158,9 +158,9 @@ def oneplayer(screen):
 
 def game_over(screen, eaten):
     message1 = "You ate %d foods" % eaten
-    game_over_message1 = pygame.font.Font(None, 30).render(message1, True, BLACK)
+    game_over_message1 = pygame.font.Font(None, 30).render(message1, True, WHITE)
     message2 = "Press enter to play again, esc to quit."
-    game_over_message2 = pygame.font.Font(None, 30).render(message2, True, BLACK)
+    game_over_message2 = pygame.font.Font(None, 30).render(message2, True, WHITE)
 
     screen.blit(game_over_message1, (32, 32))
     screen.blit(game_over_message2, (62, 62))
