@@ -29,6 +29,13 @@ def end_condition(board, coord):
         return True
     return False
 
+def make_board():
+    spots = [[] for i in range(BOARD_LENGTH)]
+    for row in spots:
+        for i in range(BOARD_LENGTH):
+            row.append(0)
+    return spots
+    
 
 def update_board(screen, snake, food):
     rect = pygame.Rect(0, 0, OFFSET, OFFSET)
@@ -80,15 +87,59 @@ def menu(screen):
 def quit(screen):
     return False
 
+def change_direction(head, direction):
+    if (direction == DIRECTIONS.Up):
+        return (head[0] - 1, head[1], rand_color())
+    elif (direction == DIRECTIONS.Down):
+        return (head[0] + 1, head[1], rand_color())
+    elif (direction == DIRECTIONS.Left):
+        return (head[0], head[1] - 1, rand_color())
+    elif (direction == DIRECTIONS.Right):
+        return (head[0], head[1] + 1, rand_color())
+
+def is_food(board, point):
+    return board[point[0]][point[1]] == 2
+
+def get_direction(events, prev_dir, identifier):
+    if (identifier == "arrows"):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    if prev_dir != DIRECTIONS.Down:
+                        return DIRECTIONS.Up
+                elif event.key == pygame.K_DOWN:
+                    if prev_dir != DIRECTIONS.Up:
+                        return DIRECTIONS.Down
+                elif event.key == pygame.K_RIGHT:
+                    if prev_dir != DIRECTIONS.Left:
+                        return DIRECTIONS.Right
+                elif event.key == pygame.K_LEFT:
+                    if prev_dir != DIRECTIONS.Right:
+                        return DIRECTIONS.Left
+        return prev_dir
+    if (identifier == "wasd"):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w:
+                    if prev_dir != DIRECTIONS.Down:
+                        return DIRECTIONS.Up
+                elif event.key == pygame.K_s:
+                    if prev_dir != DIRECTIONS.Up:
+                        return DIRECTIONS.Down
+                elif event.key == pygame.K_a:
+                    if prev_dir != DIRECTIONS.Left:
+                        return DIRECTIONS.Right
+                elif event.key == pygame.K_d:
+                    if prev_dir != DIRECTIONS.Right:
+                        return DIRECTIONS.Left
+        return prev_dir
+
+
 # Return false to quit program, true to go to
 # gameover screen
-def oneplayer(screen): 
+def one_player(screen): 
     clock = pygame.time.Clock()
-
-    spots = [[] for i in range(BOARD_LENGTH)]
-    for row in spots:
-        for i in range(BOARD_LENGTH):
-            row.append(0)
+    spots = make_board()
 
     # Board set up
     tailmax = 4
@@ -102,44 +153,23 @@ def oneplayer(screen):
         clock.tick(15)
         # Event processing
         done = False
-        for event in pygame.event.get():
+        events = pygame.event.get()
+        for event in events: 
             if event.type == pygame.QUIT:
                 print("Quit given")
                 done = True
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    if direction != DIRECTIONS.Down:
-                        direction = DIRECTIONS.Up
-                elif event.key == pygame.K_DOWN:
-                    if direction != DIRECTIONS.Up:
-                        direction = DIRECTIONS.Down
-                elif event.key == pygame.K_RIGHT:
-                    if direction != DIRECTIONS.Left:
-                        direction = DIRECTIONS.Right
-                elif event.key == pygame.K_LEFT:
-                    if direction != DIRECTIONS.Right:
-                        direction = DIRECTIONS.Left
                 break
-
         if done:
             return False
+        direction = get_direction(events, direction, "arrows")
 
         # Game logic
         head = snake.pop()
-        if (direction == DIRECTIONS.Up):
-            next_head = (head[0] - 1, head[1], rand_color())
-        elif (direction == DIRECTIONS.Down):
-            next_head = (head[0] + 1, head[1], rand_color())
-        elif (direction == DIRECTIONS.Left):
-            next_head = (head[0], head[1] - 1, rand_color())
-        elif (direction == DIRECTIONS.Right):
-            next_head = (head[0], head[1] + 1, rand_color())
+        next_head = change_direction(head, direction)
         if (end_condition(spots, next_head)):
-            print(next_head)
-            print("end condition reached")
             return tailmax
 
-        if spots[next_head[0]][next_head[1]] == 2:
+        if is_food(spots, next_head):
             tailmax += 4
             food = find_food(spots)
 
@@ -155,6 +185,19 @@ def oneplayer(screen):
         spots = update_board(screen, snake, food)
 
         pygame.display.update()
+
+def two_player(screen):
+    clock = pygame.time.Clock()
+    spots = make_board()
+
+    # Board set up
+    tailmax = 4
+    direction = DIRECTIONS.Right
+    snake = deque()
+    snake.append((0, 0, rand_color()))
+    spots[0][0] = 1
+    food = find_food(spots)
+
 
 def game_over(screen, eaten):
     message1 = "You ate %d foods" % eaten
@@ -192,7 +235,7 @@ def main():
             pick = menu(screen)
 
         options = {0 : quit,
-                1 : oneplayer}
+                1 : one_player}
         now = options[pick](screen)
         if now == False:
             break
