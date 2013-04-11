@@ -6,6 +6,8 @@ BOARD_LENGTH = 32
 OFFSET = 16
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 
 
 DIRECTIONS = namedtuple('DIRECTIONS',
@@ -16,11 +18,18 @@ def rand_color():
 
 class Snake(object):
     def __init__(self, direction=DIRECTIONS.Right, 
-            point=(0, 0, rand_color())):
+            point=(0, 0, rand_color()), color=None):
         self.tailmax = 4
         self.direction = direction 
         self.deque = deque()
         self.deque.append(point)
+        self.color = color
+    
+    def get_color(self):
+        if self.color is None:
+            return rand_color()
+        else:
+            return self.color
 
 def find_food(spots):
     while True:
@@ -47,7 +56,7 @@ def make_board():
     return spots
     
 
-def update_board(screen, snake, food):
+def update_board(screen, snakes, food):
     rect = pygame.Rect(0, 0, OFFSET, OFFSET)
 
     spots = [[] for i in range(BOARD_LENGTH)]
@@ -63,29 +72,36 @@ def update_board(screen, snake, food):
     spots[food[0]][food[1]] = 2
     temprect = rect.move(food[1] * OFFSET, food[0] * OFFSET)
     pygame.draw.rect(screen, WHITE, temprect)
-    for coord in snake:
-        spots[coord[0]][coord[1]] = 1
-        temprect = rect.move(coord[1] * OFFSET, coord[0] * OFFSET)
-        pygame.draw.rect(screen, coord[2], temprect)
+    for snake in snakes:
+        for coord in snake.deque:
+            spots[coord[0]][coord[1]] = 1
+            temprect = rect.move(coord[1] * OFFSET, coord[0] * OFFSET)
+            pygame.draw.rect(screen, coord[2], temprect)
     return spots
 
 
 # Return 0 to exit the program, 1 for a one-player game
 def menu(screen):
-    menu_message = pygame.font.Font(None, 30).render("Press enter to start", True, WHITE)
+    font = pygame.font.Font(None, 30)
+    menu_message1 = font.render("Press enter for one-player, t for two-player", True, WHITE)
+    menu_message2 = font.render("Red is first player, blue is second player", True, WHITE)
+
     screen.fill(BLACK)
-    screen.blit(menu_message, (32, 32)) 
+    screen.blit(menu_message1, (32, 32)) 
+    screen.blit(menu_message2, (32, 64))
     pygame.display.update()
     while True: 
         done = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("Quit given")
                 done = True
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     entered = True
                     return 1
+                if event.key == pygame.K_t:
+                    entered = True
+                    return 2
         if done:
             break
     if done:
@@ -95,15 +111,17 @@ def menu(screen):
 def quit(screen):
     return False
 
-def change_direction(head, direction):
-    if (direction == DIRECTIONS.Up):
-        return (head[0] - 1, head[1], rand_color())
-    elif (direction == DIRECTIONS.Down):
-        return (head[0] + 1, head[1], rand_color())
-    elif (direction == DIRECTIONS.Left):
-        return (head[0], head[1] - 1, rand_color())
-    elif (direction == DIRECTIONS.Right):
-        return (head[0], head[1] + 1, rand_color())
+def move(snake):
+    head = snake.deque.pop()
+    snake.deque.append(head)
+    if (snake.direction == DIRECTIONS.Up):
+        return (head[0] - 1, head[1], snake.get_color())
+    elif (snake.direction == DIRECTIONS.Down):
+        return (head[0] + 1, head[1], snake.get_color())
+    elif (snake.direction == DIRECTIONS.Left):
+        return (head[0], head[1] - 1, snake.get_color())
+    elif (snake.direction == DIRECTIONS.Right):
+        return (head[0], head[1] + 1, snake.get_color())
 
 def is_food(board, point):
     return board[point[0]][point[1]] == 2
@@ -134,10 +152,10 @@ def get_direction(events, prev_dir, identifier):
                 elif event.key == pygame.K_s:
                     if prev_dir != DIRECTIONS.Up:
                         return DIRECTIONS.Down
-                elif event.key == pygame.K_a:
+                elif event.key == pygame.K_d:
                     if prev_dir != DIRECTIONS.Left:
                         return DIRECTIONS.Right
-                elif event.key == pygame.K_d:
+                elif event.key == pygame.K_a:
                     if prev_dir != DIRECTIONS.Right:
                         return DIRECTIONS.Left
         return prev_dir
@@ -151,7 +169,6 @@ def one_player(screen):
 
     snake = Snake()
     # Board set up
-    snake.deque.append((0, 0, rand_color()))
     spots[0][0] = 1
     food = find_food(spots)
 
@@ -170,8 +187,7 @@ def one_player(screen):
         snake.direction = get_direction(events, snake.direction, "arrows")
 
         # Game logic
-        head = snake.deque.pop()
-        next_head = change_direction(head, snake.direction)
+        next_head = move(snake)
         if (end_condition(spots, next_head)):
             return snake.tailmax
 
@@ -179,7 +195,6 @@ def one_player(screen):
             snake.tailmax += 4
             food = find_food(spots)
 
-        snake.deque.append(head)
         snake.deque.append(next_head)
 
         if len(snake.deque) > snake.tailmax:
@@ -188,7 +203,7 @@ def one_player(screen):
         # Draw code
         screen.fill(BLACK)  # makes screen white
 
-        spots = update_board(screen, snake.deque, food)
+        spots = update_board(screen, [snake], food)
 
         pygame.display.update()
 
@@ -196,10 +211,45 @@ def two_player(screen):
     clock = pygame.time.Clock()
     spots = make_board()
 
-    snakes = [Snake(), Snake(DIRECTIONS.Right, 
-        (BOARD_LENGTH, BOARD_LENGTH, rand_color()))]
-    
-    
+    snakes = [Snake(DIRECTIONS.Right, (0, 0, RED), RED), Snake(DIRECTIONS.Right, (5, 5, BLUE), BLUE)]
+    for snake in snakes:
+        point = snake.deque.pop()
+        spots[point[0]][point[1]] = 1
+        snake.deque.append(point)
+    food = find_food(spots)
+
+    while True:
+        clock.tick(15)
+        done = False
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                done = True
+                break
+        if done:
+            return False
+        snakes[0].direction = get_direction(events, snakes[0].direction, "arrows")
+        snakes[1].direction = get_direction(events, snakes[1].direction, "wasd")
+       
+        for snake in snakes:
+            next_head = move(snake)
+            if (end_condition(spots, next_head)):
+                return snake.tailmax
+
+            if is_food(spots, next_head):
+                snake.tailmax += 4
+                food = find_food(spots)
+
+            snake.deque.append(next_head)
+
+            if len(snake.deque) > snake.tailmax:
+                snake.deque.popleft()
+
+        screen.fill(BLACK)
+
+        spots = update_board(screen, snakes, food)
+
+        pygame.display.update()
 
 
 def game_over(screen, eaten):
@@ -222,8 +272,6 @@ def game_over(screen, eaten):
                 if event.key == pygame.K_RETURN:
                     return True
 
- 
-
 
 def main():
     pygame.init()
@@ -238,7 +286,8 @@ def main():
             pick = menu(screen)
 
         options = {0 : quit,
-                1 : one_player}
+                1 : one_player,
+                2 : two_player}
         now = options[pick](screen)
         if now == False:
             break
