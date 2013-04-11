@@ -11,6 +11,16 @@ BLACK = (0, 0, 0)
 DIRECTIONS = namedtuple('DIRECTIONS',
         ['Up', 'Down', 'Left', 'Right'])(0, 1, 2, 3)
 
+def rand_color():
+    return (random.randrange(254), random.randrange(254), random.randrange(254))
+
+class Snake(object):
+    def __init__(self, direction=DIRECTIONS.Right, 
+            point=(0, 0, rand_color())):
+        self.tailmax = 4
+        self.direction = direction 
+        self.deque = deque()
+        self.deque.append(point)
 
 def find_food(spots):
     while True:
@@ -59,8 +69,6 @@ def update_board(screen, snake, food):
         pygame.draw.rect(screen, coord[2], temprect)
     return spots
 
-def rand_color():
-    return (random.randrange(254), random.randrange(254), random.randrange(254))
 
 # Return 0 to exit the program, 1 for a one-player game
 def menu(screen):
@@ -141,11 +149,9 @@ def one_player(screen):
     clock = pygame.time.Clock()
     spots = make_board()
 
+    snake = Snake()
     # Board set up
-    tailmax = 4
-    direction = DIRECTIONS.Right
-    snake = deque()
-    snake.append((0, 0, rand_color()))
+    snake.deque.append((0, 0, rand_color()))
     spots[0][0] = 1
     food = find_food(spots)
 
@@ -161,28 +167,28 @@ def one_player(screen):
                 break
         if done:
             return False
-        direction = get_direction(events, direction, "arrows")
+        snake.direction = get_direction(events, snake.direction, "arrows")
 
         # Game logic
-        head = snake.pop()
-        next_head = change_direction(head, direction)
+        head = snake.deque.pop()
+        next_head = change_direction(head, snake.direction)
         if (end_condition(spots, next_head)):
-            return tailmax
+            return snake.tailmax
 
         if is_food(spots, next_head):
-            tailmax += 4
+            snake.tailmax += 4
             food = find_food(spots)
 
-        snake.append(head)
-        snake.append(next_head)
+        snake.deque.append(head)
+        snake.deque.append(next_head)
 
-        if len(snake) > tailmax:
-            tail = snake.popleft()
+        if len(snake.deque) > snake.tailmax:
+            snake.deque.popleft()
 
         # Draw code
         screen.fill(BLACK)  # makes screen white
 
-        spots = update_board(screen, snake, food)
+        spots = update_board(screen, snake.deque, food)
 
         pygame.display.update()
 
@@ -190,13 +196,10 @@ def two_player(screen):
     clock = pygame.time.Clock()
     spots = make_board()
 
-    # Board set up
-    tailmax = 4
-    direction = DIRECTIONS.Right
-    snake = deque()
-    snake.append((0, 0, rand_color()))
-    spots[0][0] = 1
-    food = find_food(spots)
+    snakes = [Snake(), Snake(DIRECTIONS.Right, 
+        (BOARD_LENGTH, BOARD_LENGTH, rand_color()))]
+    
+    
 
 
 def game_over(screen, eaten):
