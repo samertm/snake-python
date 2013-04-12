@@ -147,25 +147,27 @@ def move(snake):
     if (next_dir == DIRECTIONS.Up):
         if snake.direction != DIRECTIONS.Down:
             next_move =  (head[0] - 1, head[1], snake.get_color())
+            snake.direction = next_dir
         else:
             next_move =  (head[0] + 1, head[1], snake.get_color())
     elif (next_dir == DIRECTIONS.Down):
         if snake.direction != DIRECTIONS.Up:
             next_move =  (head[0] + 1, head[1], snake.get_color())
+            snake.direction = next_dir
         else:
             next_move =  (head[0] - 1, head[1], snake.get_color())
     elif (next_dir == DIRECTIONS.Left):
         if snake.direction != DIRECTIONS.Right:
             next_move =  (head[0], head[1] - 1, snake.get_color())
+            snake.direction = next_dir
         else:
             next_move =  (head[0], head[1] + 1, snake.get_color())
     elif (next_dir == DIRECTIONS.Right):
         if snake.direction != DIRECTIONS.Left:
             next_move =  (head[0], head[1] + 1, snake.get_color())
+            snake.direction = next_dir
         else:
             next_move =  (head[0], head[1] - 1, snake.get_color())
-    if next_dir != snake.direction:
-        snake.direction = next_dir
     return next_move
 
 def is_food(board, point):
@@ -241,12 +243,10 @@ def two_player(screen):
                 break
         if done:
             return False
-        get_direction(events, snakes[0], "arrows")
-        get_direction(events, snakes[1], "wasd")
+        snakes[0].populate_nextDir(events, "arrows")
+        snakes[1].populate_nextDir(events, "wasd")
 
         for snake in snakes:
-            if len(snake.nextDir) != 0:
-                snake.direction = snake.nextDir.pop()
             next_head = move(snake)
             if (end_condition(spots, next_head)):
                 return snake.tailmax
