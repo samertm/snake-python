@@ -24,12 +24,37 @@ class Snake(object):
         self.deque = deque()
         self.deque.append(point)
         self.color = color
+        self.nextDir = deque()
     
     def get_color(self):
         if self.color is None:
             return rand_color()
         else:
             return self.color
+    
+    def populate_nextDir(self, events, identifier):
+        if (identifier == "arrows"):
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        self.nextDir.appendleft(DIRECTIONS.Up)
+                    elif event.key == pygame.K_DOWN:
+                        self.nextDir.appendleft(DIRECTIONS.Down)
+                    elif event.key == pygame.K_RIGHT:
+                        self.nextDir.appendleft(DIRECTIONS.Right)
+                    elif event.key == pygame.K_LEFT:
+                        self.nextDir.appendleft(DIRECTIONS.Left)
+        if (identifier == "wasd"):
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_w:
+                        self.nextDir.appendleft(DIRECTIONS.Up)
+                    elif event.key == pygame.K_s:
+                        self.nextDir.appendleft(DIRECTIONS.Down)
+                    elif event.key == pygame.K_d:
+                        self.nextDir.appendleft(DIRECTIONS.Right)
+                    elif event.key == pygame.K_a:
+                        self.nextDir.appendleft(DIRECTIONS.Left)
 
 def find_food(spots):
     while True:
@@ -112,53 +137,40 @@ def quit(screen):
     return False
 
 def move(snake):
+    if len(snake.nextDir) != 0:
+        next_dir = snake.nextDir.pop()
+    else:
+        next_dir = snake.direction
     head = snake.deque.pop()
     snake.deque.append(head)
-    if (snake.direction == DIRECTIONS.Up):
-        return (head[0] - 1, head[1], snake.get_color())
-    elif (snake.direction == DIRECTIONS.Down):
-        return (head[0] + 1, head[1], snake.get_color())
-    elif (snake.direction == DIRECTIONS.Left):
-        return (head[0], head[1] - 1, snake.get_color())
-    elif (snake.direction == DIRECTIONS.Right):
-        return (head[0], head[1] + 1, snake.get_color())
+    next_move = head
+    if (next_dir == DIRECTIONS.Up):
+        if snake.direction != DIRECTIONS.Down:
+            next_move =  (head[0] - 1, head[1], snake.get_color())
+        else:
+            next_move =  (head[0] + 1, head[1], snake.get_color())
+    elif (next_dir == DIRECTIONS.Down):
+        if snake.direction != DIRECTIONS.Up:
+            next_move =  (head[0] + 1, head[1], snake.get_color())
+        else:
+            next_move =  (head[0] - 1, head[1], snake.get_color())
+    elif (next_dir == DIRECTIONS.Left):
+        if snake.direction != DIRECTIONS.Right:
+            next_move =  (head[0], head[1] - 1, snake.get_color())
+        else:
+            next_move =  (head[0], head[1] + 1, snake.get_color())
+    elif (next_dir == DIRECTIONS.Right):
+        if snake.direction != DIRECTIONS.Left:
+            next_move =  (head[0], head[1] + 1, snake.get_color())
+        else:
+            next_move =  (head[0], head[1] - 1, snake.get_color())
+    if next_dir != snake.direction:
+        snake.direction = next_dir
+    return next_move
 
 def is_food(board, point):
     return board[point[0]][point[1]] == 2
 
-def get_direction(events, prev_dir, identifier):
-    if (identifier == "arrows"):
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    if prev_dir != DIRECTIONS.Down:
-                        return DIRECTIONS.Up
-                elif event.key == pygame.K_DOWN:
-                    if prev_dir != DIRECTIONS.Up:
-                        return DIRECTIONS.Down
-                elif event.key == pygame.K_RIGHT:
-                    if prev_dir != DIRECTIONS.Left:
-                        return DIRECTIONS.Right
-                elif event.key == pygame.K_LEFT:
-                    if prev_dir != DIRECTIONS.Right:
-                        return DIRECTIONS.Left
-        return prev_dir
-    if (identifier == "wasd"):
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w:
-                    if prev_dir != DIRECTIONS.Down:
-                        return DIRECTIONS.Up
-                elif event.key == pygame.K_s:
-                    if prev_dir != DIRECTIONS.Up:
-                        return DIRECTIONS.Down
-                elif event.key == pygame.K_d:
-                    if prev_dir != DIRECTIONS.Left:
-                        return DIRECTIONS.Right
-                elif event.key == pygame.K_a:
-                    if prev_dir != DIRECTIONS.Right:
-                        return DIRECTIONS.Left
-        return prev_dir
 
 
 # Return false to quit program, true to go to
@@ -184,7 +196,8 @@ def one_player(screen):
                 break
         if done:
             return False
-        snake.direction = get_direction(events, snake.direction, "arrows")
+
+        snake.populate_nextDir(events, "arrows")
 
         # Game logic
         next_head = move(snake)
@@ -228,10 +241,12 @@ def two_player(screen):
                 break
         if done:
             return False
-        snakes[0].direction = get_direction(events, snakes[0].direction, "arrows")
-        snakes[1].direction = get_direction(events, snakes[1].direction, "wasd")
-       
+        get_direction(events, snakes[0], "arrows")
+        get_direction(events, snakes[1], "wasd")
+
         for snake in snakes:
+            if len(snake.nextDir) != 0:
+                snake.direction = snake.nextDir.pop()
             next_head = move(snake)
             if (end_condition(spots, next_head)):
                 return snake.tailmax
