@@ -14,7 +14,7 @@ DIRECTIONS = namedtuple('DIRECTIONS',
         ['Up', 'Down', 'Left', 'Right'])(0, 1, 2, 3)
 
 def rand_color():
-    return (random.randrange(254), random.randrange(254), random.randrange(254))
+    return (random.randrange(254)|64, random.randrange(254)|64, random.randrange(254)|64)
 
 class Snake(object):
     def __init__(self, direction=DIRECTIONS.Right, 
@@ -97,7 +97,7 @@ def update_board(screen, snakes, food):
         num1 += 1
     spots[food[0]][food[1]] = 2
     temprect = rect.move(food[1] * OFFSET, food[0] * OFFSET)
-    pygame.draw.rect(screen, WHITE, temprect)
+    pygame.draw.rect(screen, rand_color(), temprect)
     for snake in snakes:
         for coord in snake.deque:
             spots[coord[0]][coord[1]] = 1
