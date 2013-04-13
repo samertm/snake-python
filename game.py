@@ -5,7 +5,7 @@ import pygame
 BOARD_LENGTH = 32
 OFFSET = 16
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+BLACK = (10, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 
