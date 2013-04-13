@@ -273,6 +273,11 @@ def game_over(screen, eaten):
     game_over_message1 = pygame.font.Font(None, 30).render(message1, True, WHITE)
     message2 = "Press enter to play again, esc to quit."
     game_over_message2 = pygame.font.Font(None, 30).render(message2, True, WHITE)
+    thing = pygame.Surface((BOARD_LENGTH * OFFSET, BOARD_LENGTH * OFFSET))
+    thing.fill(WHITE)
+    thing.set_alpha(150)
+    screen.blit(thing, (0,0))
+    #pygame.draw.rect(screen,pygame.Color(10,10,10,30),thing)
 
     screen.blit(game_over_message1, (32, 32))
     screen.blit(game_over_message2, (62, 62))
@@ -326,7 +331,8 @@ def main():
     screen = pygame.display.set_mode([BOARD_LENGTH * OFFSET,
         BOARD_LENGTH * OFFSET])
     pygame.display.set_caption("Snaake")
-
+    thing = pygame.Rect(10, 10, 50, 50)
+    pygame.draw.rect(screen,pygame.Color(255,255,255,255),pygame.Rect(50,50,10,10))
     first = True
     playing = True
     while playing:
