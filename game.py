@@ -56,6 +56,7 @@ class Snake(object):
                     elif event.key == pygame.K_a:
                         self.nextDir.appendleft(DIRECTIONS.Left)
 
+
 def find_food(spots):
     while True:
         food = random.randrange(BOARD_LENGTH), random.randrange(BOARD_LENGTH)
@@ -286,6 +287,25 @@ def game_over(screen, eaten):
                     return False
                 if event.key == pygame.K_RETURN:
                     return True
+
+def leaderboard(screen):
+    font = pygame.font.Font(None, 30)
+    screen.fill(BLACK)
+    try:
+        with open("leaderboard.txt") as f:
+            lines = f.readlines()
+            for line in lines:
+                delimited = line.split(",")
+                message = "{0}.........{1}".format(delimited[0], delimited[1])
+    except IOError:
+        message = "Nothing on the leaderboard yet."
+        rendered_message = font.render(message, True, WHITE)
+        screen.blit(rendered_message, (32, 32))
+
+    pygame.display.update()
+
+    
+
 
 
 def main():
