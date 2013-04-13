@@ -123,11 +123,11 @@ def menu(screen):
                 done = True
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
-                    entered = True
                     return 1
                 if event.key == pygame.K_t:
-                    entered = True
                     return 2
+                if event.key == pygame.K_l:
+                    return 3
         if done:
             break
     if done:
@@ -294,9 +294,16 @@ def leaderboard(screen):
     try:
         with open("leaderboard.txt") as f:
             lines = f.readlines()
+            titlemessage = font.render("Leaderboard", True, WHITE)
+            screen.blit(titlemessage, (32, 32))
+            dist = 64
             for line in lines:
                 delimited = line.split(",")
-                message = "{0}.........{1}".format(delimited[0], delimited[1])
+                delimited[1] = delimited[1].strip()
+                message = "{0[0]:.<10}{0[1]:.>10}".format(delimited)
+                rendered_message = font.render(message, True, WHITE)
+                screen.blit(rendered_message, (32, dist))
+                dist += 32
     except IOError:
         message = "Nothing on the leaderboard yet."
         rendered_message = font.render(message, True, WHITE)
@@ -304,9 +311,15 @@ def leaderboard(screen):
 
     pygame.display.update()
 
-    
-
-
+    while True: 
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return False
+                if event.key == pygame.K_RETURN:
+                    return True
 
 def main():
     pygame.init()
@@ -317,16 +330,17 @@ def main():
     first = True
     playing = True
     while playing:
-        if first:
+        if first or pick == 3:
             pick = menu(screen)
 
         options = {0 : quit,
                 1 : one_player,
-                2 : two_player}
+                2 : two_player,
+                3 : leaderboard}
         now = options[pick](screen)
         if now == False:
             break
-        else:
+        elif pick == 1 or pick == 2:
             eaten = now / 4 - 1
             playing = game_over(screen, eaten)
             first = False
