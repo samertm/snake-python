@@ -1,7 +1,7 @@
 from collections import deque, namedtuple
 import random
 import pygame
-#yolo
+
 BOARD_LENGTH = 32
 OFFSET = 16
 WHITE = (255, 255, 255)
