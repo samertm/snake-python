@@ -270,17 +270,22 @@ def two_player(screen):
 
 def game_over(screen, eaten):
     message1 = "You ate %d foods" % eaten
-    game_over_message1 = pygame.font.Font(None, 30).render(message1, True, WHITE)
     message2 = "Press enter to play again, esc to quit."
-    game_over_message2 = pygame.font.Font(None, 30).render(message2, True, WHITE)
-    thing = pygame.Surface((BOARD_LENGTH * OFFSET, BOARD_LENGTH * OFFSET))
-    thing.fill(WHITE)
-    thing.set_alpha(150)
-    screen.blit(thing, (0,0))
-    #pygame.draw.rect(screen,pygame.Color(10,10,10,30),thing)
+    game_over_message1 = pygame.font.Font(None, 30).render(message1, True, BLACK)
+    game_over_message2 = pygame.font.Font(None, 30).render(message2, True, BLACK)
 
+    overlay = pygame.Surface((BOARD_LENGTH * OFFSET, BOARD_LENGTH * OFFSET))
+    overlay.fill(BLACK)
+    overlay.set_alpha(150)
+    screen.blit(overlay, (0,0))
+
+    screen.blit(game_over_message1, (35, 35))
+    screen.blit(game_over_message2, (65, 65))
+    game_over_message1 = pygame.font.Font(None, 30).render(message1, True, WHITE)
+    game_over_message2 = pygame.font.Font(None, 30).render(message2, True, WHITE)
     screen.blit(game_over_message1, (32, 32))
     screen.blit(game_over_message2, (62, 62))
+   
     pygame.display.update()
 
     while True: 
