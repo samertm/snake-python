@@ -275,7 +275,7 @@ def game_over(screen, eaten):
     game_over_message2 = pygame.font.Font(None, 30).render(message2, True, BLACK)
 
     overlay = pygame.Surface((BOARD_LENGTH * OFFSET, BOARD_LENGTH * OFFSET))
-    overlay.fill(BLACK)
+    overlay.fill((84, 84, 84))
     overlay.set_alpha(150)
     screen.blit(overlay, (0,0))
 
