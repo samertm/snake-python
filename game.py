@@ -1,6 +1,7 @@
 from collections import deque, namedtuple
 import random
 import pygame
+import socket
 
 BOARD_LENGTH = 32
 OFFSET = 16
@@ -104,6 +105,36 @@ def update_board(screen, snakes, food):
             temprect = rect.move(coord[1] * OFFSET, coord[0] * OFFSET)
             pygame.draw.rect(screen, coord[2], temprect)
     return spots
+
+def get_color(s):
+    if s == "b":
+        return BLACK
+    elif s == "w":
+        return WHITE
+    elif s == "r":
+        return RED
+    elif s == "bl":
+        return BLUE
+
+def update_board_delta(screen, deltas):
+    rect = pygame.Rect(0, 0, OFFSET, OFFSET)
+    delqueue = deque()
+    addqueue = deque()
+    while len(deltas) != 0:
+        d = deltas.pop()
+        if d[0] == "d":
+            delqueue.push((d[1], d[2]))
+        elif d[0] == "a":
+            delqueue.push((d[1], d[2], get_color(d[3])))
+    for d_coord in delqueue:
+        temprect = rect.move(d_coord[1] * OFFSET, d_coord[0] * OFFSET)
+        # TODO generalize background color
+        pygame.draw.rect(screen, BLACK, temprect) 
+    for a_coord in addqueue:
+        temprect = rect.move(a_coord[1] * OFFSET, a_coord[0] * OFFSET)
+        pygame.draw.rect(screen, a_coord[2], temprect)
+    
+        
 
 
 # Return 0 to exit the program, 1 for a one-player game
@@ -217,7 +248,7 @@ def one_player(screen):
             snake.deque.popleft()
 
         # Draw code
-        screen.fill(BLACK)  # makes screen white
+        screen.fill(BLACK)  # makes screen black
 
         spots = update_board(screen, [snake], food)
 
@@ -267,6 +298,12 @@ def two_player(screen):
 
         pygame.display.update()
 
+def client(screen):
+    HOST, PORT = "samertm.com", 9999
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    s.connect((HOST, PORT))
+    
 
 def game_over(screen, eaten):
     message1 = "You ate %d foods" % eaten
