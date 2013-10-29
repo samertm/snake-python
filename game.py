@@ -159,6 +159,8 @@ def menu(screen):
                     return 2
                 if event.key == pygame.K_l:
                     return 3
+                if event.key == pygame.K_n:
+                    return 4
         if done:
             break
     if done:
@@ -298,11 +300,44 @@ def two_player(screen):
 
         pygame.display.update()
 
+def network_nextDir(events, net_id):
+    # assume "arrows"
+    str = ""
+    for event in events:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                str += net_id + "u"
+            elif event.key == pygame.K_DOWN:
+                str += net_id + "d"
+            elif event.key == pygame.K_RIGHT:
+                str += net_id + "r"
+            elif event.key == pygame.K_LEFT:
+                str += net_id + "l"
+    return str
+
 def client(screen):
     HOST, PORT = "samertm.com", 9999
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     s.connect((HOST, PORT))
+    net_id = s.recv(1024)
+    net_id = net_id.decode("utf-8")
+    fake_snake = Snake()
+    screen.fill(BLACK)
+
+    while True:
+        done = False
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                done = True
+        if done:
+            return False
+        send_data = network_nextDir(events, net_id)
+        if send_data != "":
+            s.sendall(send_data.encode("utf-8"))
+        
+
     
 
 def game_over(screen, eaten):
@@ -384,7 +419,8 @@ def main():
         options = {0 : quit,
                 1 : one_player,
                 2 : two_player,
-                3 : leaderboard}
+                3 : leaderboard,
+                4 : client }
         now = options[pick](screen)
         if now == False:
             break
