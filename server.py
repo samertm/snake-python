@@ -1,6 +1,7 @@
 import socket
 import select
 import time
+import datetime
 import random
 from collections import deque, namedtuple
 
@@ -198,6 +199,9 @@ def snake_server():
     
     food = find_food(spots)
     send_data += encode_point(food, "food")
+
+    time_stamp = datetime.datetime.now()
+    time.sleep(0.15)            # just in case...
     
     while True:
         # overview of the game loop:
@@ -211,7 +215,14 @@ def snake_server():
         for w in writes:
             w.sendall(send_data.encode("utf-8"))
 
-        time.sleep(0.25) # replace with something more appropriate
+        at_framerate = False
+        while not at_framerate:
+            temp_time = datetime.datetime.now()
+            if ((temp_time.second * 1000000 + temp_time.microsecond) -
+                (time_stamp.second *1000000 + time_stamp.microsecond) >
+                150000):
+                at_framerate = True
+        time_stamp = temp_time
 
         # check for data from clients        
         polls, _writes, _excep = select.select(socks, [], [], 0)
