@@ -1,7 +1,9 @@
+
 from collections import deque, namedtuple
 import random
 import pygame
 import socket
+import select
 
 BOARD_LENGTH = 32
 OFFSET = 16
@@ -107,35 +109,46 @@ def update_board(screen, snakes, food):
     return spots
 
 def get_color(s):
-    if s == "b":
+    if s == "bk":
         return BLACK
-    elif s == "w":
+    elif s == "wh":
         return WHITE
-    elif s == "r":
+    elif s == "rd":
         return RED
     elif s == "bl":
         return BLUE
+    elif s == "fo":
+        return rand_color()
+    else:
+        print("WHAT", s)
+        return BLUE
 
 def update_board_delta(screen, deltas):
+    # accepts a queue of deltas in the form
+    # [("d", 13, 30), ("a", 4, 6, "rd")]
+    # valid colors: re, wh, bk, bl
     rect = pygame.Rect(0, 0, OFFSET, OFFSET)
+    change_list = []
     delqueue = deque()
     addqueue = deque()
     while len(deltas) != 0:
         d = deltas.pop()
+        change_list.append(pygame.Rect(d[1], d[2], OFFSET, OFFSET))
         if d[0] == "d":
-            delqueue.push((d[1], d[2]))
+            delqueue.append((d[1], d[2]))
         elif d[0] == "a":
-            delqueue.push((d[1], d[2], get_color(d[3])))
+            addqueue.append((d[1], d[2], get_color(d[3])))
+    
     for d_coord in delqueue:
         temprect = rect.move(d_coord[1] * OFFSET, d_coord[0] * OFFSET)
         # TODO generalize background color
-        pygame.draw.rect(screen, BLACK, temprect) 
+        pygame.draw.rect(screen, BLACK, temprect)
+
     for a_coord in addqueue:
         temprect = rect.move(a_coord[1] * OFFSET, a_coord[0] * OFFSET)
         pygame.draw.rect(screen, a_coord[2], temprect)
-    
-        
 
+    return change_list
 
 # Return 0 to exit the program, 1 for a one-player game
 def menu(screen):
@@ -206,7 +219,6 @@ def move(snake):
 
 def is_food(board, point):
     return board[point[0]][point[1]] == 2
-
 
 
 # Return false to quit program, true to go to
@@ -302,19 +314,60 @@ def two_player(screen):
 
 def network_nextDir(events, net_id):
     # assume "arrows"
-    str = ""
+    enc_dir = ""
     for event in events:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                str += net_id + "u"
+                enc_dir += net_id + "u"
             elif event.key == pygame.K_DOWN:
-                str += net_id + "d"
+                enc_dir += net_id + "d"
             elif event.key == pygame.K_RIGHT:
-                str += net_id + "r"
+                enc_dir += net_id + "r"
             elif event.key == pygame.K_LEFT:
-                str += net_id + "l"
-    return str
+                enc_dir += net_id + "l"
+    return enc_dir
 
+def encode_deltas(delta_str):
+    # delta_str is in the form
+    # "(15 23 bk)(22 12 fo)(10 11 rm)"
+    deltas = deque()
+    state = "open"
+    while len(delta_str) != 0:
+        if state == "open":
+            encoded_delta = ["fx", 0, 0, "fx"]
+            delta_str = delta_str[1:]
+            on_num = 1
+            store_val = ""
+            state = "num"
+        if state == "num":
+            if delta_str[0] == " ":
+                delta_str = delta_str[1:]
+                encoded_delta[on_num] = int(store_val)
+                store_val = ""
+                on_num += 1
+                if on_num > 2:
+                    state = "color"
+            else:
+                store_val += delta_str[0]
+                delta_str = delta_str[1:]
+        if state == "color":
+            if delta_str[0] == ")":
+                if store_val == "rm":
+                    encoded_delta[0] = "d"
+                elif store_val == "fo":
+                    encoded_delta[0] = "a"
+                    encoded_delta[3] = "fo"
+                else:
+                    encoded_delta[0] = "a"
+                    encoded_delta[3] = store_val
+                delta_str = delta_str[1:]
+                state = "open"
+                deltas.appendleft(encoded_delta)
+            else:
+                store_val += delta_str[0]
+                delta_str = delta_str[1:]
+    return deltas
+                
 def client(screen):
     HOST, PORT = "samertm.com", 9999
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -322,9 +375,10 @@ def client(screen):
     s.connect((HOST, PORT))
     net_id = s.recv(1024)
     net_id = net_id.decode("utf-8")
-    fake_snake = Snake()
+    fake_snake= Snake()
     screen.fill(BLACK)
-
+    pygame.display.update()
+    
     while True:
         done = False
         events = pygame.event.get()
@@ -336,10 +390,20 @@ def client(screen):
         send_data = network_nextDir(events, net_id)
         if send_data != "":
             s.sendall(send_data.encode("utf-8"))
+
+        read, _write, _except = select.select([s], [], [], 0)
+        recv_data = ""
+
+        if len(read) != 0:
+            recv_data = read[0].recv(1024)
+            recv_data = recv_data.decode("utf-8")
+            if recv_data == "":
+                break
+            deltas = encode_deltas(recv_data)
+            change_list = update_board_delta(screen, deltas)
+            pygame.display.update()
+
         
-
-    
-
 def game_over(screen, eaten):
     message1 = "You ate %d foods" % eaten
     message2 = "Press enter to play again, esc to quit."
