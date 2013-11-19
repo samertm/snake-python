@@ -210,6 +210,7 @@ def snake_server():
     while True:
         # overview of the game loop:
         # send add/remove data to clients
+        # calculate framerate
         # check for data from clients
         # parse client data & append data to snake objects
         # run game logic & create send_data
@@ -219,13 +220,16 @@ def snake_server():
         for w in writes:
             w.sendall(send_data.encode("utf-8"))
 
+        # calculate framerate
         at_framerate = False
         while not at_framerate:
             temp_time = datetime.datetime.now()
-            if ((temp_time.minute * 60000000 + temp_time.second * 100000 + temp_time.microsecond) -
-                (time_stamp.minute *60000000 + time_stamp.second *100000 + time_stamp.microsecond) >
-                30000):
+            time_delta = ((temp_time.minute * 60000000 + temp_time.second * 100000 + temp_time.microsecond) -
+                          (time_stamp.minute *60000000 + time_stamp.second *100000 + time_stamp.microsecond))
+            if time_delta > 70000:
                 at_framerate = True
+            else:
+                time.sleep((70000 - time_delta) / 1000000)
         time_stamp = temp_time
 
         # check for data from clients        
