@@ -224,8 +224,8 @@ def snake_server():
         at_framerate = False
         while not at_framerate:
             temp_time = datetime.datetime.now()
-            time_delta = ((temp_time.minute * 60000000 + temp_time.second * 100000 + temp_time.microsecond) -
-                          (time_stamp.minute *60000000 + time_stamp.second *100000 + time_stamp.microsecond))
+            time_delta = ((temp_time.minute * 60000000 + temp_time.second * 1000000 + temp_time.microsecond) -
+                          (time_stamp.minute *60000000 + time_stamp.second *1000000 + time_stamp.microsecond))
             if time_delta > 70000:
                 at_framerate = True
             else:
@@ -281,7 +281,6 @@ def snake_server():
                 else:
                     remove_point = snake.deque.popleft()
                     send_data += encode_point(remove_point, "remove")
-
 
         spots = network_update_board(snakes, food)
     for i in socks:
