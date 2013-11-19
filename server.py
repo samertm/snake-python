@@ -274,6 +274,7 @@ def snake_server():
                     snake.direction = DIRECTIONS.Right
                     point = find_point(spots)
                     new_head = (point[0], point[1], snake.get_color())
+                    snake.tailmax = 4
                     snake.deque.append(new_head)
                     snake.state = SNAKE_STATE.Alive
                     send_data += encode_point(new_head, "snake")
