@@ -15,6 +15,8 @@ BLUE = (0, 0, 255)
 DIRECTIONS = namedtuple('DIRECTIONS',
         ['Up', 'Down', 'Left', 'Right'])(0, 1, 2, 3)
 
+SNAKE_STATE = namedtuple('SNAKE_STATE', ['Alive', 'Dead'])(0, 1)
+
 class Snake(object):
     def __init__(self, direction=DIRECTIONS.Right, 
                  point=(0, 0, RED), color=None):
@@ -24,6 +26,7 @@ class Snake(object):
         self.deque.append(point)
         self.color = color
         self.nextDir = deque()
+        self.state = SNAKE_STATE.Alive
     
     def get_color(self):
         if self.color is None:
@@ -56,13 +59,13 @@ class Snake(object):
     #                 elif event.key == pygame.K_a:
     #                     self.nextDir.appendleft(DIRECTIONS.Left)
 
-def find_food(spots):
+def find_point(spots):
     while True:
-        food = random.randrange(BOARD_LENGTH), random.randrange(BOARD_LENGTH)
-        if (not (spots[food[0]][food[1]] == 1 or
-            spots[food[0]][food[1]] == 2)):
+        point = random.randrange(BOARD_LENGTH), random.randrange(BOARD_LENGTH)
+        if (not (spots[point[0]][point[1]] == 1 or
+            spots[point[0]][point[1]] == 2)):
             break
-    return food
+    return point
 
 
 def end_condition(board, coord):
@@ -170,6 +173,7 @@ def network_update_board(snakes, food):
 def is_food(board, point):
     return board[point[0]][point[1]] == 2
 
+
 def snake_server(): 
     HOST, PORT = "162.243.37.26", 9999
     num_snakes = 2
@@ -197,7 +201,7 @@ def snake_server():
         send_data += encode_point(point, "snake")
         snake.deque.append(point)
     
-    food = find_food(spots)
+    food = find_point(spots)
     send_data += encode_point(food, "food")
 
     time_stamp = datetime.datetime.now()
@@ -243,22 +247,36 @@ def snake_server():
         # run game logic & create send_data                
         send_data = ""
         for snake in snakes:
-            next_head = move(snake)
-            if (end_condition(spots, next_head)):
-                return snake.tailmax
-
-            if is_food(spots, next_head):
-                snake.tailmax += 4
-                food = find_food(spots)
-
-            snake.deque.append(next_head)
-            send_data += encode_point(next_head, "snake")
+            if snake.state == SNAKE_STATE.Alive:
+                next_head = move(snake)
+                if (end_condition(spots, next_head)):
+                    snake.state = SNAKE_STATE.Dead
+                    break
+                    
+                if is_food(spots, next_head):
+                    snake.tailmax += 4
+                    food = find_point(spots)
+                    
+                snake.deque.append(next_head)
+                send_data += encode_point(next_head, "snake")
             
-            if len(snake.deque) > snake.tailmax:
-                remove_point = snake.deque.popleft()
-                send_data += encode_point(remove_point, "remove")
-                
-        send_data += encode_point(food, "food")
+                if len(snake.deque) > snake.tailmax:
+                    remove_point = snake.deque.popleft()
+                    send_data += encode_point(remove_point, "remove")
+                    
+                send_data += encode_point(food, "food")
+            elif snake.state == SNAKE_STATE.Dead:
+                if len(snake.deque) == 0:
+                    snake.direction = DIRECTIONS.Right
+                    point = find_point(spots)
+                    new_head = (point[0], point[1], snake.get_color())
+                    snake.deque.append(new_head)
+                    snake.state = SNAKE_STATE.Alive
+                    send_data += encode_point(new_head, "snake")
+                else:
+                    remove_point = snake.deque.popleft()
+                    send_data += encode_point(remove_point, "remove")
+
 
         spots = network_update_board(snakes, food)
     for i in socks:
