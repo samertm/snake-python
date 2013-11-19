@@ -218,8 +218,8 @@ def snake_server():
         at_framerate = False
         while not at_framerate:
             temp_time = datetime.datetime.now()
-            if ((temp_time.second * 1000000 + temp_time.microsecond) -
-                (time_stamp.second *1000000 + time_stamp.microsecond) >
+            if ((temp_time.minute * 60000000 + temp_time.second * 100000 + temp_time.microsecond) -
+                (time_stamp.minute *60000000 + time_stamp.second *100000 + time_stamp.microsecond) >
                 150000):
                 at_framerate = True
         time_stamp = temp_time
