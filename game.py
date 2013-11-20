@@ -1,4 +1,3 @@
-
 from collections import deque, namedtuple
 import random
 import pygame
@@ -391,7 +390,7 @@ def client(screen):
         if send_data != "":
             s.sendall(send_data.encode("utf-8"))
 
-        read, _write, _except = select.select([s], [], [], 0)
+        read, _write, _except = select.select([s], [], [])
         recv_data = ""
 
         if len(read) != 0:
