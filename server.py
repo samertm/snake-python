@@ -178,7 +178,7 @@ def snake_server():
     HOST, PORT = "162.243.37.26", 9999
     num_snakes = 2
     spots = make_board()
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind((HOST, PORT))
     s.listen(2)
 

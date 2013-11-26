@@ -369,7 +369,7 @@ def encode_deltas(delta_str):
                 
 def client(screen):
     HOST, PORT = "samertm.com", 9999
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     s.connect((HOST, PORT))
     net_id = s.recv(1024)
